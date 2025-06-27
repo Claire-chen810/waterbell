@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+  <title>喝水咯</title>
+  <style>
+    :root {
+      --primary: #4FC3F7;
+      --primary-dark: #039be5;
+      --bg-gradient: linear-gradient(135deg, #e3f2fd 0%, #b3e5fc 100%);
+      --card: #fff;
+      --text: #222;
+      --progress-bg: #e3f2fd;
+    }
+    html, body {
+      height: 100%;
+      margin: 0; padding: 0;
+      background: var(--bg-gradient);
+      font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 2.5rem 1rem 1rem 1rem;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 20px;
+      box-shadow: 0 2px 16px rgba(79,195,247,0.10);
+      padding: 1.5rem 1rem;
+      margin: 1.2rem 0;
+    }
+    .center { text-align: center; }
+    .waterdrop {
+      width: 56px; height: 56px;
+      margin: 0 auto 0.5rem auto;
+      display: block;
+    }
+    .big-water-btn {
+      width: 120px; height: 120px; border-radius: 50%;
+      background: linear-gradient(180deg, #4FC3F7 60%, #039be5 100%);
+      color: #fff; font-size: 1.3rem; font-weight: bold;
+      border: none; box-shadow: 0 4px 24px rgba(79,195,247,0.18);
+      margin: 1.5rem auto 1rem auto; display: flex; align-items: center; justify-content: center;
+      position: relative; cursor: pointer; transition: background 0.2s;
+    }
+    .big-water-btn:active {
+      background: linear-gradient(180deg, #039be5 60%, #0288d1 100%);
+    }
+    .progress-bar {
+      width: 100%; height: 10px; background: var(--progress-bg);
+      border-radius: 8px; margin: 1rem 0 0.5rem 0; overflow: hidden;
+    }
+    .progress-inner {
+      height: 100%;
+      background: linear-gradient(90deg, #4FC3F7 60%, #039be5 100%);
+      border-radius: 8px;
+      transition: width 0.4s;
+    }
+    .tips { color: #039be5; font-size: 1rem; margin: 0.5rem 0 0.2rem 0; font-weight: 500; }
+    .subtips { color: #90caf9; font-size: 0.95rem; margin-bottom: 0.5rem; }
+    .wave-box { position: relative; width: 100%; height: 60px; overflow: hidden; margin-bottom: 1.2rem; }
+    .wave {
+      position: absolute; left: 0; top: 0; width: 200%; height: 100%;
+      background: url('data:image/svg+xml;utf8,<svg width="400" height="60" xmlns="http://www.w3.org/2000/svg"><path d="M0 30 Q 50 60 100 30 T 200 30 T 300 30 T 400 30 V60 H0Z" fill="%234FC3F7" fill-opacity="0.18"/></svg>') repeat-x;
+      animation: waveMove 3s linear infinite;
+    }
+    @keyframes waveMove { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    @media (max-width: 600px) {
+      .container { padding: 1.2rem 0.2rem; }
+      .card { padding: 1rem 0.5rem; }
+      .big-water-btn { width: 90px; height: 90px; font-size: 1.1rem; }
+      .waterdrop { width: 40px; height: 40px; }
+    }
+    input, select {
+      font-size: 1rem; padding: 6px 10px; border-radius: 8px;
+      border: 1px solid #b3e5fc; margin: 0 4px 0 0; outline: none;
+    }
+    input[type="time"] { min-width: 90px; }
+    .remind-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .remind-item {
+      display: inline-flex;
+      align-items: center;
+      background: #e3f2fd;
+      color: #039be5;
+      border-radius: 10px;
+      padding: 6px 18px 6px 14px;
+      font-size: 1.1rem;
+      margin: 0;
+      min-width: 80px;
+    }
+    .remind-item button {
+      background: none;
+      border: none;
+      color: #039be5;
+      margin-left: 8px;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+    .settings-btn {
+      position: absolute; right: 18px; top: 18px; background: none; border: none; color: #4FC3F7; font-size: 1.5rem; cursor: pointer;
+    }
+    .modal-mask {
+      position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.18); z-index: 99; display: flex; align-items: center; justify-content: center;
+    }
+    .modal {
+      background: #fff; border-radius: 16px; padding: 1.2rem 1.5rem; box-shadow: 0 2px 16px rgba(79,195,247,0.18); text-align: center; min-width: 220px;
+    }
+    /* 设置页表单美化（增强左对齐） */
+    #setupForm {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1.2rem;
+      width: 100%;
+    }
+    .setup-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      justify-content: flex-start;
+      margin-bottom: 0.2rem;
+    }
+    #setupForm label {
+      width: 90px;
+      text-align: left;
+      font-size: 1.05rem;
+      color: #222;
+    }
+    #setupForm input[type="number"], #setupForm select, #setupForm input[type="time"] {
+      width: 120px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid #b3e5fc;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    #setupForm button[type="button"] {
+      padding: 6px 16px;
+      border-radius: 8px;
+      border: 1px solid #b3e5fc;
+      background: #fff;
+      color: #039be5;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    #setupForm button[type="button"]:active {
+      background: #e3f2fd;
+    }
+    #setupForm .big-water-btn {
+      margin-top: 1.5rem;
+      align-self: center;
+    }
+    .setup-row .step-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid #b3e5fc;
+      background: #fff;
+      color: #039be5;
+      font-size: 1.2rem;
+      cursor: pointer;
+      margin: 0 2px;
+      transition: background 0.2s;
+    }
+    .setup-row .step-btn:active {
+      background: #e3f2fd;
+    }
+    #backToMain {
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      background: none;
+      border: none;
+      font-size: 2rem;
+      color: #4FC3F7;
+      cursor: pointer;
+      z-index: 20;
+      width: auto;
+      height: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: none;
+      padding: 0;
+    }
+    #backToMain:active { color: #039be5; }
+    #setupCard { position: relative; }
+    #calendarExportBtn {
+      position: absolute;
+      left: 18px;
+      top: 18px;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #4FC3F7;
+      cursor: pointer;
+      z-index: 30;
+      transition: color 0.2s;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #calendarExportBtn:hover {
+      color: #039be5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 设置页 -->
+    <div class="card" id="setupCard">
+      <button id="backToMain" title="返回">←</button>
+      <div class="center">
+        <svg class="waterdrop" viewBox="0 0 48 48"><ellipse cx="24" cy="28" rx="14" ry="18" fill="#4FC3F7"/><ellipse cx="24" cy="28" rx="10" ry="14" fill="#b3e5fc"/></svg>
+        <h2 style="color:var(--primary);margin:0 0 0.5rem 0;">喝水咯</h2>
+        <div style="color:#039be5;font-size:1.1rem;margin-bottom:1.2rem;">让喝水成为健康习惯</div>
+      </div>
+      <form id="setupForm" autocomplete="off">
+        <div class="setup-row">
+          <label for="goalInput">每日目标：</label>
+          <button type="button" class="step-btn" id="goalDec">-</button>
+          <input type="number" id="goalInput" value="2000" min="500" max="5000" required>
+          <button type="button" class="step-btn" id="goalInc">+</button>
+          <span>ml</span>
+        </div>
+        <div class="setup-row">
+          <label for="stepInput">单次饮水量：</label>
+          <button type="button" class="step-btn" id="stepDec">-</button>
+          <input type="number" id="stepInput" value="250" min="50" max="1000" required>
+          <button type="button" class="step-btn" id="stepInc">+</button>
+          <span>ml</span>
+        </div>
+        <div class="setup-row" style="flex-wrap: wrap; align-items: flex-start;">
+          <label for="remindTimeInput" style="margin-top: 0.5rem;">提醒时间：</label>
+          <select id="remindTimeInput">
+            <option value="">请选择</option>
+            <option value="08:00">08:00</option>
+            <option value="09:00">09:00</option>
+            <option value="10:00">10:00</option>
+            <option value="11:00">11:00</option>
+            <option value="12:00">12:00</option>
+            <option value="13:00">13:00</option>
+            <option value="14:00">14:00</option>
+            <option value="15:00">15:00</option>
+            <option value="16:00">16:00</option>
+            <option value="17:00">17:00</option>
+            <option value="18:00">18:00</option>
+            <option value="19:00">19:00</option>
+            <option value="20:00">20:00</option>
+          </select>
+          <button type="button" id="addRemindBtn">添加</button>
+        </div>
+        <div class="remind-list" id="remindList"></div>
+        <button class="big-water-btn" type="submit">开始喝水</button>
+      </form>
+    </div>
+    <!-- 主页面 -->
+    <div class="card" id="mainCard" style="display:none; position:relative;">
+      <button class="settings-btn" id="toSettings" title="设置">⚙️</button>
+      <button id="musicToggle" title="背景音乐" style="position:absolute;right:54px;top:18px;background:none;border:none;font-size:1.5rem;color:#4FC3F7;cursor:pointer;z-index:10;">🎵</button>
+      <button id="calendarExportBtn" title="导出喝水日历">📅</button>
+      <div class="center">
+        <svg class="waterdrop" viewBox="0 0 48 48"><ellipse cx="24" cy="28" rx="14" ry="18" fill="#4FC3F7"/><ellipse cx="24" cy="28" rx="10" ry="14" fill="#b3e5fc"/></svg>
+        <h2 style="color:var(--primary);margin:0 0 0.5rem 0;">喝水咯</h2>
+        <div style="color:#039be5;font-size:1.1rem;margin-bottom:1.2rem;">让喝水成为健康习惯</div>
+      </div>
+      <div class="wave-box"><div class="wave"></div></div>
+      <div class="center" style="font-size:2.5rem;font-weight:700;" id="amount">0</div>
+      <div class="center" style="color:#888;">/ <span id="goal">2000</span><span id="unit">ml</span></div>
+      <div class="progress-bar"><div class="progress-inner" id="progressBar" style="width:0%"></div></div>
+      <div class="center" style="color:#039be5;font-size:1rem;">今日目标进度 <span id="percent">0</span>%</div>
+      <div class="remind-periods" id="remindPeriods" style="margin:1rem 0 0.5rem 0;"></div>
+      <button class="big-water-btn" id="drinkBtn">喝一杯</button>
+      <div class="tips">💡 每日小贴士</div>
+      <div class="subtips">早晨起床后喝一杯温水，可以唤醒身体机能，促进新陈代谢！</div>
+    </div>
+    <!-- 激励弹窗 -->
+    <div id="modalMask" class="modal-mask" style="display:none;">
+      <div class="modal" id="modalBox">
+        <div id="modalMsg">本时段喝水达标，继续加油！</div>
+        <button onclick="document.getElementById('modalMask').style.display='none';" style="margin-top:1rem;padding:0.5rem 1.2rem;border-radius:8px;border:none;background:var(--primary);color:#fff;font-size:1rem;">知道啦</button>
+      </div>
+    </div>
+    <!-- 喝水音效 -->
+    <audio id="drinkAudio" src="assets/coffee-drink-212341.mp3"></audio>
+    <!-- 背景音乐 -->
+    <audio id="bgMusic" src="assets/sparkling-intro-124736.mp3" loop autoplay></audio>
+  </div>
+  <script>
+    // 工具函数
+    function getGoal() { return Number(localStorage.getItem('goal')||2000); }
+    function getStep() { return Number(localStorage.getItem('step')||250); }
+    function getReminds() { return JSON.parse(localStorage.getItem('reminds')||'[]'); }
+    function setGoal(val) { localStorage.setItem('goal',val); }
+    function setStep(val) { localStorage.setItem('step',val); }
+    function todayKey() {
+      const d = new Date();
+      return 'drink_' + d.getFullYear() + (d.getMonth()+1).toString().padStart(2,'0') + d.getDate().toString().padStart(2,'0');
+    }
+    function getAmount() { return Number(localStorage.getItem(todayKey())||0); }
+    function setAmount(val) { localStorage.setItem(todayKey(),val); }
+    // 每个时间段喝水量
+    function getPeriodKey(time) {
+      const d = new Date();
+      return 'period_' + d.getFullYear() + (d.getMonth()+1).toString().padStart(2,'0') + d.getDate().toString().padStart(2,'0') + '_' + time;
+    }
+    function getPeriodAmount(time) { return Number(localStorage.getItem(getPeriodKey(time))||0); }
+    function setPeriodAmount(time, val) { localStorage.setItem(getPeriodKey(time), val); }
+
+    // 切换页面
+    function showSetup() {
+      document.getElementById('setupCard').style.display = '';
+      document.getElementById('mainCard').style.display = 'none';
+      var backBtn = document.getElementById('backToMain');
+      if (backBtn) backBtn.style.display = '';
+    }
+    function showMain() {
+      document.getElementById('setupCard').style.display = 'none';
+      document.getElementById('mainCard').style.display = '';
+      var backBtn = document.getElementById('backToMain');
+      if (backBtn) backBtn.style.display = 'none';
+    }
+
+    // 设置页逻辑
+    function renderRemindList() {
+      const reminds = getReminds();
+      const list = document.getElementById('remindList');
+      list.innerHTML = '';
+      reminds.forEach((t,i)=>{
+        const span = document.createElement('span');
+        span.className = 'remind-item';
+        span.innerHTML = t + ' <button title=\"删除\" onclick=\"removeRemind('+i+')\">×</button>';
+        list.appendChild(span);
+      });
+    }
+    window.removeRemind = function(idx) {
+      const arr = getReminds();
+      arr.splice(idx,1);
+      setReminds(arr);
+      renderRemindList();
+    }
+    const remindTimeInput = document.getElementById('remindTimeInput');
+    document.getElementById('addRemindBtn').onclick = function(){
+      const val = remindTimeInput.value;
+      if(val && !getReminds().includes(val)){
+        const arr = getReminds();
+        arr.push(val);
+        setReminds(arr);
+        renderRemindList();
+        remindTimeInput.value = '';
+      }
+    };
+    document.getElementById('setupForm').onsubmit = function(e){
+      e.preventDefault();
+      setGoal(document.getElementById('goalInput').value);
+      setStep(document.getElementById('stepInput').value);
+      setReminds(getReminds());
+      setAmount(0);
+      // 清空所有时段喝水量
+      getReminds().forEach(t=>setPeriodAmount(t,0));
+      showMain();
+      updateMainUI();
+    };
+
+    // 主页面逻辑
+    function getCurrentPeriod(reminds) {
+      if (!reminds.length) return null;
+      const now = new Date();
+      const nowMins = now.getHours() * 60 + now.getMinutes();
+      let current = reminds[0];
+      let minDiff = 24 * 60;
+      reminds.forEach(t => {
+        const [h, m] = t.split(':').map(Number);
+        const diff = Math.abs(nowMins - (h * 60 + m));
+        if (diff < minDiff) { minDiff = diff; current = t; }
+      });
+      return current;
+    }
+    function renderRemindPeriods() {
+      const reminds = getReminds();
+      const step = getStep();
+      let html = '';
+      reminds.forEach(t => {
+        const amount = getPeriodAmount(t);
+        html += `<span style="display:inline-block;background:#e3f2fd;color:#039be5;border-radius:6px;padding:2px 10px;margin:0 6px 6px 0;font-size:0.95rem;">
+          ${t}：${amount}/${step}
+        </span>`;
+      });
+      document.getElementById('remindPeriods').innerHTML = html;
+    }
+    function updateMainUI() {
+      const amount = getAmount();
+      const goal = getGoal();
+      document.getElementById('amount').textContent = amount;
+      document.getElementById('goal').textContent = goal;
+      const percent = Math.min(100, Math.round(amount/goal*100));
+      document.getElementById('progressBar').style.width = percent + '%';
+      document.getElementById('percent').textContent = percent;
+      renderRemindPeriods();
+    }
+    const tipsArr = [
+      '早晨起床后喝一杯温水，可以唤醒身体机能，促进新陈代谢！',
+      '喝水有助于保持皮肤水润，延缓衰老。',
+      '每次喝水不要太快，分多次小口慢饮更健康。',
+      '饭前半小时喝水有助于消化。',
+      '运动后及时补充水分，防止脱水。',
+      '多喝水有助于预防肾结石和尿路感染。',
+      '工作学习时，定时喝水有助于保持专注。',
+      '喝水时可以加一片柠檬，补充维生素C。',
+      '不要等口渴才喝水，渴了说明身体已经缺水。',
+      '保持每日饮水量，养成健康好习惯！'
+    ];
+    let lastTipIdx = -1;
+    function setRandomTip() {
+      let idx;
+      do {
+        idx = Math.floor(Math.random() * tipsArr.length);
+      } while (idx === lastTipIdx && tipsArr.length > 1);
+      lastTipIdx = idx;
+      document.querySelector('.subtips').textContent = tipsArr[idx];
+    }
+    // 初始化时设置一条
+    setRandomTip();
+    const oldDrinkBtn = document.getElementById('drinkBtn').onclick;
+    document.getElementById('drinkBtn').onclick = function(){
+      var audio = document.getElementById('drinkAudio');
+      audio.currentTime = 0;
+      audio.play();
+      // 总量
+      let amount = getAmount();
+      amount += getStep();
+      setAmount(amount);
+      // 时段量
+      const reminds = getReminds();
+      if(reminds.length){
+        const current = getCurrentPeriod(reminds);
+        let pAmount = getPeriodAmount(current);
+        pAmount += getStep();
+        setPeriodAmount(current, pAmount);
+        // 达标激励
+        if(pAmount >= getStep()){
+          showModal('本时段喝水达标，继续加油！');
+        }
+      }
+      updateMainUI();
+      if(typeof oldDrinkBtn === 'function') oldDrinkBtn();
+      setRandomTip();
+    };
+
+    // 设置按钮
+    document.getElementById('toSettings').onclick = function(){
+      showSetup();
+      renderRemindList();
+    };
+
+    // 激励弹窗
+    function showModal(msg){
+      document.getElementById('modalMsg').textContent = msg;
+      document.getElementById('modalMask').style.display = '';
+    }
+
+    // 初始化
+    function init() {
+      if(localStorage.getItem('goal')){
+        showMain();
+        updateMainUI();
+      }else{
+        showSetup();
+        renderRemindList();
+      }
+    }
+    init();
+
+    var bg = document.getElementById('bgMusic');
+    var musicBtn = document.getElementById('musicToggle');
+    var isMusicOn = true;
+    bg.volume = 0.08;
+    bg.muted = false;
+
+    function updateMusicIcon() {
+      musicBtn.textContent = isMusicOn ? '🎵' : '🔇';
+    }
+    musicBtn.onclick = function() {
+      isMusicOn = !isMusicOn;
+      if(isMusicOn) {
+        bg.muted = false;
+        bg.play().catch(()=>{});
+      } else {
+        bg.muted = true;
+        bg.pause();
+      }
+      updateMusicIcon();
+    };
+
+    // 自动播放+首次交互后强制播放
+    function tryPlay() {
+      if(isMusicOn) {
+        bg.muted = false;
+        bg.play().catch(()=>{});
+      }
+      document.body.removeEventListener('click', tryPlay);
+      document.body.removeEventListener('touchstart', tryPlay);
+    }
+    bg.play().catch(()=>{});
+    updateMusicIcon();
+    document.body.addEventListener('click', tryPlay);
+    document.body.addEventListener('touchstart', tryPlay);
+
+    // 目标递增递减
+    const goalInput = document.getElementById('goalInput');
+    document.getElementById('goalDec').onclick = function() {
+      let v = parseInt(goalInput.value, 10);
+      v = Math.max(500, v - 500);
+      goalInput.value = v;
+      saveSettingsAndRefresh();
+    };
+    document.getElementById('goalInc').onclick = function() {
+      let v = parseInt(goalInput.value, 10);
+      v = Math.min(5000, v + 500);
+      goalInput.value = v;
+      saveSettingsAndRefresh();
+    };
+    // 饮水量递增递减
+    const stepInput = document.getElementById('stepInput');
+    document.getElementById('stepDec').onclick = function() {
+      let v = parseInt(stepInput.value, 10);
+      v = Math.max(50, v - 100);
+      stepInput.value = v;
+      saveSettingsAndRefresh();
+    };
+    document.getElementById('stepInc').onclick = function() {
+      let v = parseInt(stepInput.value, 10);
+      v = Math.min(1000, v + 100);
+      stepInput.value = v;
+      saveSettingsAndRefresh();
+    };
+    // 保存设置并刷新主页面
+    function saveSettingsAndRefresh() {
+      setGoal(goalInput.value);
+      setStep(stepInput.value);
+      setReminds(getReminds());
+      updateMainUI();
+    }
+
+    var backBtn = document.getElementById('backToMain');
+    if (backBtn) backBtn.onclick = function() { showMain(); };
+
+    function setReminds(arr) { localStorage.setItem('reminds', JSON.stringify(arr)); }
+
+    window.onload = function() {
+      var bg = document.getElementById('bgMusic');
+      if (bg) {
+        bg.volume = 0.08;
+        // 尝试自动播放
+        bg.play().catch(()=>{});
+        // 用户首次交互后再播放
+        function tryPlay() {
+          bg.play().catch(()=>{});
+          document.body.removeEventListener('click', tryPlay);
+          document.body.removeEventListener('touchstart', tryPlay);
+        }
+        document.body.addEventListener('click', tryPlay);
+        document.body.addEventListener('touchstart', tryPlay);
+      }
+    };
+
+    // 日历icon按钮点击等同于导出日历
+    var calendarBtn = document.getElementById('calendarExportBtn');
+    if (calendarBtn) {
+      calendarBtn.onclick = function() {
+        if (typeof exportCalendar === 'function') {
+          exportCalendar();
+        } else {
+          // 兼容之前的导出逻辑
+          document.getElementById('exportCalendarBtn')?.click();
+        }
+      };
+    }
+
+    function exportCalendar() {
+      const reminds = getReminds();
+      if (!reminds.length) {
+        alert('请先添加至少一个提醒时间！');
+        return;
+      }
+      const pad = n => n.toString().padStart(2, '0');
+      const now = new Date();
+      const dtstamp = now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()) + 'T' + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds()) + 'Z';
+      let ics = 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//喝水咯//EN\n';
+      reminds.forEach(time => {
+        const [h, m] = time.split(':');
+        // 事件开始和结束（5分钟）
+        const dtstart = 'T' + pad(h) + pad(m) + '00';
+        const dtend = 'T' + pad(h) + pad((parseInt(m)+5)%60) + '00';
+        ics += 'BEGIN:VEVENT\n';
+        ics += 'UID:' + dtstamp + '-' + h + m + '@waterbell\n';
+        ics += 'DTSTAMP:' + dtstamp + '\n';
+        ics += 'SUMMARY:喝水提醒\n';
+        ics += 'DTSTART;TZID=Asia/Shanghai:' + '20250101' + dtstart + '\n';
+        ics += 'DTEND;TZID=Asia/Shanghai:' + '20250101' + dtend + '\n';
+        ics += 'RRULE:FREQ=DAILY\n';
+        ics += 'DESCRIPTION:喝水咯-定时喝水更健康！\n';
+        ics += 'END:VEVENT\n';
+      });
+      ics += 'END:VCALENDAR';
+      // 下载ics文件
+      const blob = new Blob([ics.replace(/\n/g, '\r\n')], {type: 'text/calendar'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'waterbell.ics';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    // 设置页按钮调用
+    var exportBtn = document.getElementById('exportCalendarBtn');
+    if (exportBtn) exportBtn.onclick = exportCalendar;
+    // 日历icon按钮调用
+    var calendarBtn = document.getElementById('calendarExportBtn');
+    if (calendarBtn) calendarBtn.onclick = exportCalendar;
+  </script>
+</body>
+</html>
